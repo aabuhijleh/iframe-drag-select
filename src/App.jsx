@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import {
   boxesIntersect,
   useSelectionContainer,
@@ -6,11 +6,12 @@ import {
 import "./App.css";
 
 function App() {
-  const selectableItems = useRef([]);
+  const [container, setContainer] = useState(null);
   const iframeRef = useRef(null);
+  const selectableItems = useRef([]);
 
   const { DragSelection } = useSelectionContainer({
-    eventsElement: document.getElementById("root"),
+    eventsElement: container,
     onSelectionChange: (box) => {
       const scrollAwareBox = {
         ...box,
@@ -24,8 +25,9 @@ function App() {
       selectableItems.current.forEach(({ element, box: itemBox }) => {
         const scrollAwareItemBox = {
           ...itemBox,
-          top: itemBox.top + iframeRect.top - iframeScrollTop,
-          left: itemBox.left + iframeRect.left - iframeScrollLeft,
+          top: itemBox.top + iframeRect.top - iframeScrollTop + window.scrollY,
+          left:
+            itemBox.left + iframeRect.left - iframeScrollLeft + window.scrollX,
         };
         const isIntersecting = boxesIntersect(
           scrollAwareBox,
@@ -71,13 +73,15 @@ function App() {
 
   return (
     <div className="wrapper">
-      <DragSelection />
-      <iframe
-        ref={iframeRef}
-        className="frame"
-        src={`/iframe-content.html`}
-        onLoad={updateSelectableItems}
-      />
+      <div ref={setContainer} className="frameWrapper">
+        <DragSelection />
+        <iframe
+          ref={iframeRef}
+          className="frame"
+          src={`/iframe-content.html`}
+          onLoad={updateSelectableItems}
+        />
+      </div>
     </div>
   );
 }
